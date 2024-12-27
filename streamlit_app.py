@@ -154,7 +154,7 @@ if st.button("Predict"):
     numeric_features = [
         "Rooms", "Bathrooms", "Car Parks", "Size", 
         "Distance to Hospital (KM)", "Distance to Shopping_mall (KM)", 
-        "Distance to Trainstation (KM)", "Distance to Primary_school (KM)", 
+        "Distance to Train_station (KM)", "Distance to Primary_school (KM)", 
         "Distance to Secondary_school (KM)", "Distance to University (KM)"
     ]
 
