@@ -6,7 +6,7 @@ import pandas as pd
 # Load model, scaler, and feature names
 model = joblib.load('random_forest_model.pkl')
 scaler = joblib.load('scaler.pkl')
-features = joblib.load('feature_names.pkl')
+features = joblib.load('feature_names.pkl')  # This assumes you have a file for feature names
 
 # Streamlit page configuration
 st.set_page_config(
