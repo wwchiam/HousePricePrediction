@@ -1,6 +1,5 @@
 import streamlit as st
 import joblib
-import numpy as np
 import pandas as pd
 
 # Load model, scaler, and feature names
@@ -81,11 +80,20 @@ property_type_options = [
 ]
 
 furnishing_options = ["Partly Furnished", "Fully Furnished", "Unfurnished"]
+size_type_options = ["b.400 - 600", "c.600 - 1000", "d.> 1000"]
+property_category_options = ["High Rise Luxury", "High Rise Usual", "Landed Luxury", "Landed Usual"]
+distance_range_options = ["< 500m", "< 1km", "< 2km", "< 3km", "< 4km", "< 5km", "no train station nearby"]
+size_category_options = ["Tiny (400-1000 sq ft)", "Small (1000-1500 sq ft)", "Medium (1500-2000 sq ft)",
+                         "Large (2000-3000 sq ft)", "Very Large (3000-5000 sq ft)", "Huge (>5000 sq ft)"]
 
 # Sidebar inputs
 location = st.sidebar.selectbox("Location", location_options)
 property_type = st.sidebar.selectbox("Property Type", property_type_options)
 furnishing = st.sidebar.selectbox("Furnishing", furnishing_options)
+size_type = st.sidebar.selectbox("Size Type", size_type_options)
+property_category = st.sidebar.selectbox("Property Category", property_category_options)
+distance_range = st.sidebar.selectbox("Distance Range", distance_range_options)
+size_category = st.sidebar.selectbox("Size Category", size_category_options)
 rooms = st.sidebar.slider("Rooms", 1, 10, 3)
 bathrooms = st.sidebar.slider("Bathrooms", 1, 10, 2)
 car_parks = st.sidebar.slider("Car Parks", 0, 5, 1)
@@ -107,26 +115,33 @@ if st.button("Predict"):
         "Size": size,
         "Distance to Hospital (KM)": distance_hospital,
         "Distance to Shopping_mall (KM)": distance_mall,
-        "Distance to Train_station (KM)": distance_train,
+        "Distance to Trainstation (KM)": distance_train,
         "Distance to Primary_school (KM)": distance_primary_school,
         "Distance to Secondary_school (KM)": distance_secondary_school,
         "Distance to University (KM)": distance_university,
     }
 
-    # One-hot encode the categorical features
-    location_col = f"Location_{location}"
-    property_type_col = f"Property Type_{property_type}"
-    furnishing_col = f"Furnishing_{furnishing}"
+    # Initialize a dictionary for the categorical features to be one-hot encoded
+    categorical_features = {}
+
+    # Set categorical features (Location, Property Type, Furnishing, Size Type, Property Category, Distance Range, Size Category)
+    categorical_features[f"Location_{location}"] = 1
+    categorical_features[f"Property Type_{property_type}"] = 1
+    categorical_features[f"Furnishing_{furnishing}"] = 1
+    categorical_features[f"g_size_{size_type}"] = 1
+    categorical_features[f"Property Category_{property_category}"] = 1
+    categorical_features[f"Distance Range_{distance_range}"] = 1
+    categorical_features[f"Size_Category_{size_category}"] = 1
+
+    # Add categorical features to the user input data
+    user_input.update(categorical_features)
 
     # Create a DataFrame from the user input
     user_input_encoded = pd.DataFrame([user_input])
-    user_input_encoded[location_col] = 1
-    user_input_encoded[property_type_col] = 1
-    user_input_encoded[furnishing_col] = 1
 
     # Initialize the aligned input with zeros for all columns
     aligned_input = pd.DataFrame(0, index=[0], columns=features)
-    
+
     # Ensure all input data matches the expected columns
     for col in user_input_encoded.columns:
         if col in aligned_input.columns:
@@ -139,7 +154,7 @@ if st.button("Predict"):
     numeric_features = [
         "Rooms", "Bathrooms", "Car Parks", "Size", 
         "Distance to Hospital (KM)", "Distance to Shopping_mall (KM)", 
-        "Distance to Train_station (KM)", "Distance to Primary_school (KM)", 
+        "Distance to Trainstation (KM)", "Distance to Primary_school (KM)", 
         "Distance to Secondary_school (KM)", "Distance to University (KM)"
     ]
 
