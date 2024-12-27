@@ -1,6 +1,153 @@
 import streamlit as st
+import joblib
+import numpy as np
+import pandas as pd
 
-st.title("🎈 My new app")
-st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
+# Load model, scaler, and feature names
+model = joblib.load('random_forest_model.pkl')
+scaler = joblib.load('scaler.pkl')
+features = joblib.load('feature_names.pkl')
+
+# Streamlit page configuration
+st.set_page_config(
+    page_title="House Price Prediction", page_icon="🏠", layout="wide", initial_sidebar_state="expanded"
 )
+st.markdown(
+    """
+    <style>
+    .main {
+        background-color: #f5f7fa;
+        font-family: Arial, sans-serif;
+    }
+    .sidebar .sidebar-content {
+        background-color: #2e86de;
+        color: white;
+    }
+    .stButton>button {
+        background-color: #2e86de;
+        color: white;
+        border-radius: 5px;
+        font-weight: bold;
+        width: 100%;
+    }
+    .stButton>button:hover {
+        background-color: #1c5eb6;
+        color: white;
+    }
+    h1 {
+        color: #1c5eb6;
+        font-weight: bold;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Title and input instructions
+st.title("🏠 House Price Prediction")
+st.markdown("Enter the features of the house to predict its price:")
+
+# Sidebar header for input features
+input_data = {}
+st.sidebar.header("Input Features")
+
+# Define the options for categorical features
+location_options = [
+    "alam damai", "ampang", "bandar damai perdana", "bandar menjalara",
+    "bangsar", "bangsar south", "batu caves", "brickfields",
+    "bukit bintang", "bukit damansara", "bukit jalil", "bukit kiara",
+    "bukit ledang", "bukit tunku", "chan sow lin", "cheras",
+    "country heights damansara", "damansara", "desa pandan",
+    "desa parkcity", "desa petaling", "federal hill", "jalan ipoh",
+    "jalan kuching", "jalan sultan ismail", "kepong", "keramat",
+    "kl eco city", "kl sentral", "klcc", "kota damansara",
+    "kuala lumpur", "kuchai lama", "mid valley city", "mont kiara",
+    "off gasing indah", "oug", "pandan indah", "pandan jaya",
+    "pandan perdana", "pantai", "puchong", "rawang", "salak selatan",
+    "segambut", "semarak", "sentul", "seputeh", "setapak",
+    "setiawangsa", "sri damansara", "sri hartamas", "sri petaling",
+    "sungai besi", "sungai penchala", "sunway spk", "taman desa",
+    "taman duta", "taman melati", "titiwangsa", "wangsa maju"
+]
+
+property_type_options = [
+    "1-sty Terrace/Link House", "1.5-sty Terrace/Link House",
+    "2-sty Terrace/Link House", "2.5-sty Terrace/Link House",
+    "3-sty Terrace/Link House", "3.5-sty Terrace/Link House",
+    "4-sty Terrace/Link House", "4.5-sty Terrace/Link House",
+    "Apartment", "Bungalow", "Bungalow Land", "Cluster House",
+    "Condominium", "Residential Land", "Semi-detached House",
+    "Serviced Residence", "Townhouse"
+]
+
+furnishing_options = ["Partly Furnished", "Fully Furnished", "Unfurnished"]
+
+# Sidebar inputs
+location = st.sidebar.selectbox("Location", location_options)
+property_type = st.sidebar.selectbox("Property Type", property_type_options)
+furnishing = st.sidebar.selectbox("Furnishing", furnishing_options)
+rooms = st.sidebar.slider("Rooms", 1, 10, 3)
+bathrooms = st.sidebar.slider("Bathrooms", 1, 10, 2)
+car_parks = st.sidebar.slider("Car Parks", 0, 5, 1)
+size = st.sidebar.number_input("Size (sq ft)", value=1000)
+distance_hospital = st.sidebar.number_input("Distance to Hospital (KM)", value=1.5)
+distance_mall = st.sidebar.number_input("Distance to Shopping Mall (KM)", value=2.0)
+distance_train = st.sidebar.number_input("Distance to Train Station (KM)", value=1.0)
+distance_primary_school = st.sidebar.number_input("Distance to Primary School (KM)", value=1.2)
+distance_secondary_school = st.sidebar.number_input("Distance to Secondary School (KM)", value=1.8)
+distance_university = st.sidebar.number_input("Distance to University (KM)", value=2.5)
+
+# Predict button
+if st.button("Predict"):
+    # Prepare the user input data
+    user_input = {
+        "Rooms": rooms,
+        "Bathrooms": bathrooms,
+        "Car Parks": car_parks,
+        "Size": size,
+        "Distance to Hospital (KM)": distance_hospital,
+        "Distance to Shopping_mall (KM)": distance_mall,
+        "Distance to Train_station (KM)": distance_train,
+        "Distance to Primary_school (KM)": distance_primary_school,
+        "Distance to Secondary_school (KM)": distance_secondary_school,
+        "Distance to University (KM)": distance_university,
+    }
+
+    # One-hot encode the categorical features
+    location_col = f"Location_{location}"
+    property_type_col = f"Property Type_{property_type}"
+    furnishing_col = f"Furnishing_{furnishing}"
+
+    # Create a DataFrame from the user input
+    user_input_encoded = pd.DataFrame([user_input])
+    user_input_encoded[location_col] = 1
+    user_input_encoded[property_type_col] = 1
+    user_input_encoded[furnishing_col] = 1
+
+    # Initialize the aligned input with zeros for all columns
+    aligned_input = pd.DataFrame(0, index=[0], columns=features)
+
+    # Ensure all input data matches the expected columns
+    for col in user_input_encoded.columns:
+        if col in aligned_input.columns:
+            aligned_input[col] = user_input_encoded[col]
+
+    # List of numeric features for scaling
+    numeric_features = [
+        "Rooms", "Bathrooms", "Car Parks", "Size", 
+        "Distance to Hospital (KM)", "Distance to Shopping_mall (KM)", 
+        "Distance to Train_station (KM)", "Distance to Primary_school (KM)", 
+        "Distance to Secondary_school (KM)", "Distance to University (KM)"
+    ]
+
+    # Scale numeric features if necessary
+    aligned_input[numeric_features] = scaler.transform(aligned_input[numeric_features])
+
+    # Make prediction
+    predicted_price = model.predict(aligned_input)[0]
+
+    # Display the results
+    st.subheader("Predicted House Price:")
+    st.write(f"<span style='font-size:24px; color:#1c5eb6; font-weight:bold;'>RM {predicted_price:,.2f}</span>", unsafe_allow_html=True)
+    st.write("### Input Data for Prediction:")
+    st.dataframe(aligned_input.style.set_properties(**{'background-color': '#f7f9fc', 'color': '#333', 'border': '1px solid #ccc'}))
