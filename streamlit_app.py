@@ -79,59 +79,42 @@ property_type_options = [
     "Serviced Residence", "Townhouse"
 ]
 
-furnishing_options = ["Partly Furnished", "Fully Furnished", "Unfurnished"]
-size_type_options = ["b.400 - 600", "c.600 - 1000", "d.> 1000"]
-property_category_options = ["High Rise Luxury", "High Rise Usual", "Landed Luxury", "Landed Usual"]
-distance_range_options = ["< 500m", "< 1km", "< 2km", "< 3km", "< 4km", "< 5km", "no train station nearby"]
-size_category_options = ["Tiny (400-1000 sq ft)", "Small (1000-1500 sq ft)", "Medium (1500-2000 sq ft)",
-                         "Large (2000-3000 sq ft)", "Very Large (3000-5000 sq ft)", "Huge (>5000 sq ft)"]
-
-# Sidebar inputs
+# Sidebar inputs for the top 10 features
 location = st.sidebar.selectbox("Location", location_options)
 property_type = st.sidebar.selectbox("Property Type", property_type_options)
-furnishing = st.sidebar.selectbox("Furnishing", furnishing_options)
-size_type = st.sidebar.selectbox("Size Type", size_type_options)
-property_category = st.sidebar.selectbox("Property Category", property_category_options)
-distance_range = st.sidebar.selectbox("Distance Range", distance_range_options)
-size_category = st.sidebar.selectbox("Size Category", size_category_options)
 rooms = st.sidebar.slider("Rooms", 1, 10, 3)
 bathrooms = st.sidebar.slider("Bathrooms", 1, 10, 2)
 car_parks = st.sidebar.slider("Car Parks", 0, 5, 1)
 size = st.sidebar.number_input("Size (sq ft)", value=1000)
+distance_train = st.sidebar.number_input("Distance to Train Station (KM)", value=1.0)
+distance_university = st.sidebar.number_input("Distance to University (KM)", value=2.5)
+distance_secondary_school = st.sidebar.number_input("Distance to Secondary School (KM)", value=1.8)
 distance_hospital = st.sidebar.number_input("Distance to Hospital (KM)", value=1.5)
 distance_mall = st.sidebar.number_input("Distance to Shopping Mall (KM)", value=2.0)
-distance_train = st.sidebar.number_input("Distance to Train Station (KM)", value=1.0)
 distance_primary_school = st.sidebar.number_input("Distance to Primary School (KM)", value=1.2)
-distance_secondary_school = st.sidebar.number_input("Distance to Secondary School (KM)", value=1.8)
-distance_university = st.sidebar.number_input("Distance to University (KM)", value=2.5)
 
 # Predict button
 if st.button("Predict"):
-    # Prepare the user input data
+    # Prepare the user input data for the top 10 features
     user_input = {
         "Rooms": rooms,
         "Bathrooms": bathrooms,
         "Car Parks": car_parks,
         "Size": size,
+        "Distance to Train_station (KM)": distance_train,  # Corrected naming
+        "Distance to University (KM)": distance_university,
+        "Distance to Secondary_school (KM)": distance_secondary_school,
         "Distance to Hospital (KM)": distance_hospital,
         "Distance to Shopping_mall (KM)": distance_mall,
-        "Distance to Trainstation (KM)": distance_train,
         "Distance to Primary_school (KM)": distance_primary_school,
-        "Distance to Secondary_school (KM)": distance_secondary_school,
-        "Distance to University (KM)": distance_university,
     }
 
     # Initialize a dictionary for the categorical features to be one-hot encoded
     categorical_features = {}
 
-    # Set categorical features (Location, Property Type, Furnishing, Size Type, Property Category, Distance Range, Size Category)
+    # Set categorical features (Location, Property Type)
     categorical_features[f"Location_{location}"] = 1
     categorical_features[f"Property Type_{property_type}"] = 1
-    categorical_features[f"Furnishing_{furnishing}"] = 1
-    categorical_features[f"g_size_{size_type}"] = 1
-    categorical_features[f"Property Category_{property_category}"] = 1
-    categorical_features[f"Distance Range_{distance_range}"] = 1
-    categorical_features[f"Size_Category_{size_category}"] = 1
 
     # Add categorical features to the user input data
     user_input.update(categorical_features)
