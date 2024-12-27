@@ -6,7 +6,7 @@ import pandas as pd
 # Load model, scaler, and feature names
 model = joblib.load('random_forest_model.joblib')
 scaler = joblib.load('scaler.pkl')
-features = joblib.load('feature_names.pkl')  # This assumes you have a file for feature names
+features = joblib.load('feature_names.pkl') 
 
 # Streamlit page configuration
 st.set_page_config(
@@ -139,7 +139,7 @@ if st.button("Predict"):
     numeric_features = [
         "Rooms", "Bathrooms", "Car Parks", "Size", 
         "Distance to Hospital (KM)", "Distance to Shopping_mall (KM)", 
-        "Distance to Trainstation (KM)", "Distance to Primary_school (KM)", 
+        "Distance to Train_station (KM)", "Distance to Primary_school (KM)", 
         "Distance to Secondary_school (KM)", "Distance to University (KM)"
     ]
 
