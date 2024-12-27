@@ -132,11 +132,14 @@ if st.button("Predict"):
         if col in aligned_input.columns:
             aligned_input[col] = user_input_encoded[col]
 
+    # Reorder the aligned input to match the feature order expected by the model
+    aligned_input = aligned_input[features]
+
     # List of numeric features for scaling
     numeric_features = [
         "Rooms", "Bathrooms", "Car Parks", "Size", 
         "Distance to Hospital (KM)", "Distance to Shopping_mall (KM)", 
-        "Distance to Train_station (KM)", "Distance to Primary_school (KM)", 
+        "Distance to Trainstation (KM)", "Distance to Primary_school (KM)", 
         "Distance to Secondary_school (KM)", "Distance to University (KM)"
     ]
 
