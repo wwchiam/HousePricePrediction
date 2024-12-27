@@ -126,7 +126,7 @@ if st.button("Predict"):
 
     # Initialize the aligned input with zeros for all columns
     aligned_input = pd.DataFrame(0, index=[0], columns=features)
-
+    
     # Ensure all input data matches the expected columns
     for col in user_input_encoded.columns:
         if col in aligned_input.columns:
