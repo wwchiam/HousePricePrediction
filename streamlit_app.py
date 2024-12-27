@@ -1,10 +1,10 @@
 import streamlit as st
 import joblib
 import pandas as pd
+from sklearn.preprocessing import StandardScaler  # Import StandardScaler
 
-# Load model, scaler, and feature names
+# Load model and feature names
 model = joblib.load('random_forest_model.joblib')
-scaler = joblib.load('scaler.pkl')
 features = joblib.load('feature_names.pkl')  # Ensure this contains the correct feature names
 
 # Streamlit page configuration
@@ -141,8 +141,9 @@ if st.button("Predict"):
         "Distance to Secondary_school (KM)", "Distance to University (KM)"
     ]
 
-    # Scale numeric features if necessary
-    aligned_input[numeric_features] = scaler.transform(aligned_input[numeric_features])
+    # Apply StandardScaler to the numeric features
+    scaler = StandardScaler()
+    aligned_input[numeric_features] = scaler.fit_transform(aligned_input[numeric_features])
 
     # Make prediction
     predicted_price = model.predict(aligned_input)[0]
