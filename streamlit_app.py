@@ -6,7 +6,7 @@ import pandas as pd
 # Load model, scaler, and feature names
 model = joblib.load('random_forest_model.joblib')
 scaler = joblib.load('scaler.pkl')
-features = joblib.load('feature_names.pkl') 
+features = joblib.load('feature_names.pkl')  # List of features as required by the model
 
 # Streamlit page configuration
 st.set_page_config(
@@ -143,7 +143,7 @@ if st.button("Predict"):
         "Distance to Secondary_school (KM)", "Distance to University (KM)"
     ]
 
-    # Scale numeric features if necessary
+    # Scale numeric features
     aligned_input[numeric_features] = scaler.transform(aligned_input[numeric_features])
 
     # Make prediction
