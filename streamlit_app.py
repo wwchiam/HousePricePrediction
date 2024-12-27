@@ -1,7 +1,9 @@
 import streamlit as st
 import joblib
 import pandas as pd
-from sklearn.preprocessing import StandardScaler  # Import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
 
 # Load model and feature names
 model = joblib.load('random_forest_model.joblib')
@@ -93,6 +95,9 @@ distance_hospital = st.sidebar.number_input("Distance to Hospital (KM)", value=1
 distance_mall = st.sidebar.number_input("Distance to Shopping Mall (KM)", value=2.0)
 distance_primary_school = st.sidebar.number_input("Distance to Primary School (KM)", value=1.2)
 
+# Label Encoder for Size_type
+le = LabelEncoder()
+
 # Predict button
 if st.button("Predict"):
     # Prepare the user input data for the top 10 features
@@ -101,12 +106,13 @@ if st.button("Predict"):
         "Bathrooms": bathrooms,
         "Car Parks": car_parks,
         "Size": size,
-        "Distance to Train_station (KM)": distance_train,  # Corrected naming
+        "Distance to Train_station (KM)": distance_train,
         "Distance to University (KM)": distance_university,
         "Distance to Secondary_school (KM)": distance_secondary_school,
         "Distance to Hospital (KM)": distance_hospital,
         "Distance to Shopping_mall (KM)": distance_mall,
         "Distance to Primary_school (KM)": distance_primary_school,
+        "Size_type": le.fit_transform([property_type])[0],  # Example of label encoding on a feature
     }
 
     # Initialize a dictionary for the categorical features to be one-hot encoded
@@ -115,6 +121,11 @@ if st.button("Predict"):
     # Set categorical features (Location, Property Type)
     categorical_features[f"Location_{location}"] = 1
     categorical_features[f"Property Type_{property_type}"] = 1
+    categorical_features[f"Furnishing_{st.sidebar.selectbox('Furnishing', ['Fully Furnished', 'Partly Furnished', 'Unfurnished'])}"] = 1
+    categorical_features[f"Property Category_{st.sidebar.selectbox('Property Category', ['High Rise Luxury', 'High Rise Usual', 'Landed Luxury', 'Landed Usual'])}"] = 1
+    categorical_features[f"g_size_{st.sidebar.selectbox('g_size', ['b.400 - 600', 'c.600 - 1000', 'd.> 1000'])}"] = 1
+    categorical_features[f"Distance Range_{st.sidebar.selectbox('Distance Range', ['< 500m', '< 1km', '< 2km', '< 3km', '< 4km', '< 5km', 'no train station nearby'])}"] = 1
+    categorical_features[f"Size_Category_{st.sidebar.selectbox('Size Category', ['Tiny (400-1000 sq ft)', 'Small (1000-1500 sq ft)', 'Medium (1500-2000 sq ft)', 'Large (2000-3000 sq ft)', 'Very Large (3000-5000 sq ft)', 'Huge (>5000 sq ft)'])}"] = 1
 
     # Add categorical features to the user input data
     user_input.update(categorical_features)
@@ -137,7 +148,7 @@ if st.button("Predict"):
     numeric_features = [
         "Rooms", "Bathrooms", "Car Parks", "Size", 
         "Distance to Hospital (KM)", "Distance to Shopping_mall (KM)", 
-        "Distance to Train_station (KM)", "Distance to Primary_school (KM)", 
+        "Distance to Trainstation (KM)", "Distance to Primary_school (KM)", 
         "Distance to Secondary_school (KM)", "Distance to University (KM)"
     ]
 
