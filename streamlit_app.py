@@ -13,36 +13,6 @@ features = joblib.load('feature_names.pkl')  # Ensure this contains the correct 
 st.set_page_config(
     page_title="House Price Prediction", page_icon="🏠", layout="wide", initial_sidebar_state="expanded"
 )
-st.markdown(
-    """
-    <style>
-    .main {
-        background-color: #f5f7fa;
-        font-family: Arial, sans-serif;
-    }
-    .sidebar .sidebar-content {
-        background-color: #2e86de;
-        color: white;
-    }
-    .stButton>button {
-        background-color: #2e86de;
-        color: white;
-        border-radius: 5px;
-        font-weight: bold;
-        width: 100%;
-    }
-    .stButton>button:hover {
-        background-color: #1c5eb6;
-        color: white;
-    }
-    h1 {
-        color: #1c5eb6;
-        font-weight: bold;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 
 # Title and input instructions
 st.title("🏠 House Price Prediction")
@@ -95,7 +65,7 @@ distance_hospital = st.sidebar.number_input("Distance to Hospital (KM)", value=1
 distance_mall = st.sidebar.number_input("Distance to Shopping Mall (KM)", value=2.0)
 distance_primary_school = st.sidebar.number_input("Distance to Primary School (KM)", value=1.2)
 
-# Label Encoder for Size_type
+# Define label encoder for Size_type
 le = LabelEncoder()
 
 # Predict button
@@ -118,7 +88,7 @@ if st.button("Predict"):
     # Initialize a dictionary for the categorical features to be one-hot encoded
     categorical_features = {}
 
-    # Set categorical features (Location, Property Type)
+    # One-hot encode the location and property type as done in the model
     categorical_features[f"Location_{location}"] = 1
     categorical_features[f"Property Type_{property_type}"] = 1
     categorical_features[f"Furnishing_{st.sidebar.selectbox('Furnishing', ['Fully Furnished', 'Partly Furnished', 'Unfurnished'])}"] = 1
@@ -144,7 +114,7 @@ if st.button("Predict"):
     # Reorder the aligned input to match the feature order expected by the model
     aligned_input = aligned_input[features]
 
-    # List of numeric features for scaling
+    # List of numeric features for scaling (ensure these match with the model's columns)
     numeric_features = [
         "Rooms", "Bathrooms", "Car Parks", "Size", 
         "Distance to Hospital (KM)", "Distance to Shopping_mall (KM)", 
