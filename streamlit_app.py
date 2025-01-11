@@ -1,131 +1,136 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import joblib
-
-# Set page configuration
-st.set_page_config(
-    page_title="House Price Prediction App",
-    page_icon="🏡",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# Define Min-Max Normalization function
-def min_max_normalize(value, min_value, max_value):
-    return (value - min_value) / (max_value - min_value)
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
 
 # Load model and feature names
-def load_model_and_features():
-    model = joblib.load('random_forest_model.joblib')
-    feature_names = joblib.load('feature_names.pkl')
-    return model, feature_names
+model = joblib.load('random_forest_model.joblib')
+features = joblib.load('feature_names.pkl')  # Ensure this contains the correct feature names
 
-# Preprocess user input data
-def preprocess_input(input_data, feature_names):
-    normalization_ranges = {
-        'Rooms': (0, 20),
-        'Bathrooms': (0, 20),
-        'Car Parks': (0, 10),
-        'Size': (100, 10000),
-        'Distance to Hospital (KM)': (0, 50),
-        'Distance to Shopping_mall (KM)': (0, 50),
-        'Distance to Train_station (KM)': (0, 50),
-        'Distance to Primary_school (KM)': (0, 50),
-        'Distance to Secondary_school (KM)': (0, 50),
-        'Distance to University (KM)': (0, 50),
+# Streamlit page configuration
+st.set_page_config(
+    page_title="House Price Prediction", page_icon="🏠", layout="wide", initial_sidebar_state="expanded"
+)
+
+# Title and input instructions
+st.title("🏠 House Price Prediction")
+st.markdown("Enter the features of the house to predict its price:")
+
+# Sidebar header for input features
+input_data = {}
+st.sidebar.header("Input Features")
+
+# Define the options for categorical features
+location_options = [
+    "alam damai", "ampang", "bandar damai perdana", "bandar menjalara",
+    "bangsar", "bangsar south", "batu caves", "brickfields",
+    "bukit bintang", "bukit damansara", "bukit jalil", "bukit kiara",
+    "bukit ledang", "bukit tunku", "chan sow lin", "cheras",
+    "country heights damansara", "damansara", "desa pandan",
+    "desa parkcity", "desa petaling", "federal hill", "jalan ipoh",
+    "jalan kuching", "jalan sultan ismail", "kepong", "keramat",
+    "kl eco city", "kl sentral", "klcc", "kota damansara",
+    "kuala lumpur", "kuchai lama", "mid valley city", "mont kiara",
+    "off gasing indah", "oug", "pandan indah", "pandan jaya",
+    "pandan perdana", "pantai", "puchong", "rawang", "salak selatan",
+    "segambut", "semarak", "sentul", "seputeh", "setapak",
+    "setiawangsa", "sri damansara", "sri hartamas", "sri petaling",
+    "sungai besi", "sungai penchala", "sunway spk", "taman desa",
+    "taman duta", "taman melati", "titiwangsa", "wangsa maju"
+]
+
+property_type_options = [
+    "1-sty Terrace/Link House", "1.5-sty Terrace/Link House",
+    "2-sty Terrace/Link House", "2.5-sty Terrace/Link House",
+    "3-sty Terrace/Link House", "3.5-sty Terrace/Link House",
+    "4-sty Terrace/Link House", "4.5-sty Terrace/Link House",
+    "Apartment", "Bungalow", "Bungalow Land", "Cluster House",
+    "Condominium", "Residential Land", "Semi-detached House",
+    "Serviced Residence", "Townhouse"
+]
+
+# Sidebar inputs for the top 10 features
+location = st.sidebar.selectbox("Location", location_options)
+property_type = st.sidebar.selectbox("Property Type", property_type_options)
+rooms = st.sidebar.slider("Rooms", 1, 10, 3)
+bathrooms = st.sidebar.slider("Bathrooms", 1, 10, 2)
+car_parks = st.sidebar.slider("Car Parks", 0, 5, 1)
+size = st.sidebar.number_input("Size (sq ft)", value=1000)
+distance_train = st.sidebar.number_input("Distance to Train Station (KM)", value=1.0)
+distance_university = st.sidebar.number_input("Distance to University (KM)", value=2.5)
+distance_secondary_school = st.sidebar.number_input("Distance to Secondary School (KM)", value=1.8)
+distance_hospital = st.sidebar.number_input("Distance to Hospital (KM)", value=1.5)
+distance_mall = st.sidebar.number_input("Distance to Shopping Mall (KM)", value=2.0)
+distance_primary_school = st.sidebar.number_input("Distance to Primary School (KM)", value=1.2)
+
+# Define label encoder for Size_type
+le = LabelEncoder()
+
+# Predict button
+if st.button("Predict"):
+    # Prepare the user input data for the top 10 features
+    user_input = {
+        "Rooms": rooms,
+        "Bathrooms": bathrooms,
+        "Car Parks": car_parks,
+        "Size": size,
+        "Distance to Train_station (KM)": distance_train,
+        "Distance to University (KM)": distance_university,
+        "Distance to Secondary_school (KM)": distance_secondary_school,
+        "Distance to Hospital (KM)": distance_hospital,
+        "Distance to Shopping_mall (KM)": distance_mall,
+        "Distance to Primary_school (KM)": distance_primary_school,
+        "Size_type": le.fit_transform([property_type])[0],  # Example of label encoding on a feature
     }
 
-    # Initialize a DataFrame with zeros for all feature names
-    input_df = pd.DataFrame(np.zeros((1, len(feature_names))), columns=feature_names)
+    # Initialize a dictionary for the categorical features to be one-hot encoded
+    categorical_features = {}
 
-    # Update the DataFrame with user inputs and normalize numeric values
-    for col, value in input_data.items():
-        if col in normalization_ranges:
-            min_val, max_val = normalization_ranges[col]
-            input_df[col] = min_max_normalize(value, min_val, max_val)
-        elif col in input_df.columns:
-            input_df[col] = value
+    # One-hot encode the location and property type as done in the model
+    categorical_features[f"Location_{location}"] = 1
+    categorical_features[f"Property Type_{property_type}"] = 1
+    categorical_features[f"Furnishing_{st.sidebar.selectbox('Furnishing', ['Fully Furnished', 'Partly Furnished', 'Unfurnished'])}"] = 1
+    categorical_features[f"Property Category_{st.sidebar.selectbox('Property Category', ['High Rise Luxury', 'High Rise Usual', 'Landed Luxury', 'Landed Usual'])}"] = 1
+    categorical_features[f"g_size_{st.sidebar.selectbox('g_size', ['b.400 - 600', 'c.600 - 1000', 'd.> 1000'])}"] = 1
+    categorical_features[f"Distance Range_{st.sidebar.selectbox('Distance Range', ['< 500m', '< 1km', '< 2km', '< 3km', '< 4km', '< 5km', 'no train station nearby'])}"] = 1
+    categorical_features[f"Size_Category_{st.sidebar.selectbox('Size Category', ['Tiny (400-1000 sq ft)', 'Small (1000-1500 sq ft)', 'Medium (1500-2000 sq ft)', 'Large (2000-3000 sq ft)', 'Very Large (3000-5000 sq ft)', 'Huge (>5000 sq ft)'])}"] = 1
 
-    return input_df
+    # Add categorical features to the user input data
+    user_input.update(categorical_features)
 
-def main():
-    # Header Section
-    st.markdown("<h1 style='text-align: center; color: #4CAF50;'>🏡 House Price Prediction App</h1>", unsafe_allow_html=True)
-    #st.image("https://via.placeholder.com/1200x400.png?text=House+Price+Prediction", use_column_width=True)
+    # Create a DataFrame from the user input
+    user_input_encoded = pd.DataFrame([user_input])
 
-    model, feature_names = load_model_and_features()
+    # Initialize the aligned input with zeros for all columns
+    aligned_input = pd.DataFrame(0, index=[0], columns=features)
 
-    st.header("User Inputs")
+    # Ensure all input data matches the expected columns
+    for col in user_input_encoded.columns:
+        if col in aligned_input.columns:
+            aligned_input[col] = user_input_encoded[col]
 
-    # Create two columns for inputs
-    col1, col2 = st.columns(2)
+    # Reorder the aligned input to match the feature order expected by the model
+    aligned_input = aligned_input[features]
 
-    user_inputs = {}
+    # List of numeric features for scaling (ensure these match with the model's columns)
+    numeric_features = [
+        "Rooms", "Bathrooms", "Car Parks", "Size", 
+        "Distance to Hospital (KM)", "Distance to Shopping_mall (KM)", 
+        "Distance to Train_station (KM)", "Distance to Primary_school (KM)", 
+        "Distance to Secondary_school (KM)", "Distance to University (KM)"
+    ]
 
-    # Numeric Inputs in Column 1
-    with col1:
-        st.markdown("### 🧮 Numeric Inputs")
-        user_inputs['Rooms'] = st.number_input("Rooms", min_value=0.0, max_value=20.0, value=3.0, step=0.1)
-        user_inputs['Bathrooms'] = st.number_input("Bathrooms", min_value=0.0, max_value=20.0, value=2.0, step=0.1)
-        user_inputs['Car Parks'] = st.number_input("Car Parks", min_value=0.0, max_value=10.0, value=1.0, step=0.1)
-        user_inputs['Size'] = st.number_input("Size (sq ft)", min_value=100.0, max_value=10000.0, value=1500.0, step=1.0)
-        user_inputs['Distance to Hospital (KM)'] = st.number_input("Distance to Hospital (KM)", min_value=0.0, max_value=50.0, value=2.0, step=0.1)
-        user_inputs['Distance to Shopping_mall (KM)'] = st.number_input("Distance to Shopping Mall (KM)", min_value=0.0, max_value=50.0, value=1.5, step=0.1)
-        user_inputs['Distance to Train_station (KM)'] = st.number_input("Distance to Train Station (KM)", min_value=0.0, max_value=50.0, value=1.0, step=0.1)
-        user_inputs['Distance to Primary_school (KM)'] = st.number_input("Distance to Primary School (KM)", min_value=0.0, max_value=50.0, value=1.0, step=0.1)
-        user_inputs['Distance to Secondary_school (KM)'] = st.number_input("Distance to Secondary School (KM)", min_value=0.0, max_value=50.0, value=1.5, step=0.1)
-        user_inputs['Distance to University (KM)'] = st.number_input("Distance to University (KM)", min_value=0.0, max_value=50.0, value=2.0, step=0.1)
+    # Apply StandardScaler to the numeric features
+    scaler = StandardScaler()
+    aligned_input[numeric_features] = scaler.fit_transform(aligned_input[numeric_features])
 
-    # Categorical Inputs in Column 2
-    with col2:
-        st.markdown("### 📋 Categorical Inputs")
-        location = st.selectbox("Location", [
-            'alam damai', 'ampang', 'bandar damai perdana', 'bandar menjalara', 'bangsar', 'bangsar south',
-            'batu caves', 'brickfields', 'bukit bintang', 'bukit damansara', 'bukit jalil', 'bukit kiara',
-            'bukit ledang', 'bukit tunku', 'chan sow lin', 'cheras', 'country heights damansara',
-            'damansara', 'desa pandan', 'desa parkcity', 'desa petaling', 'federal hill', 'gombak',
-            'happy garden', 'jalan ipoh', 'jalan kuching', 'jalan sultan ismail', 'kepong', 'keramat',
-            'kl eco city', 'kl sentral', 'klcc', 'kota damansara', 'kuala lumpur', 'kuchai lama',
-            'mid valley city', 'mont kiara', 'off gasing indah,', 'oug', 'pandan indah', 'pandan jaya',
-            'pandan perdana', 'pantai', 'puchong', 'rawang', 'salak selatan', 'segambut', 'semarak',
-            'sentul', 'seputeh', 'setapak', 'setiawangsa', 'sri damansara', 'sri hartamas', 'sri petaling',
-            'sungai besi', 'sungai penchala', 'sunway spk', 'taman connaught', 'taman desa', 'taman duta',
-            'taman melati', 'taman melawati', 'taman tun dr ismail', 'taman wangsa permai', 'titiwangsa',
-            'wangsa maju'])
-        property_type = st.selectbox("Property Type", [
-            '1-sty Terrace/Link House', '1.5-sty Terrace/Link House', '2-sty Terrace/Link House',
-            '2.5-sty Terrace/Link House', '3-sty Terrace/Link House', '3.5-sty Terrace/Link House',
-            '4-sty Terrace/Link House', '4.5-sty Terrace/Link House', 'Apartment', 'Bungalow',
-            'Bungalow Land', 'Cluster House', 'Condominium', 'Flat', 'Residential Land',
-            'Semi-detached House', 'Serviced Residence', 'Townhouse'])
-        furnishing = st.selectbox("Furnishing", ['Fully Furnished', 'Partly Furnished', 'Unfurnished'])
-        size_type = st.selectbox("Size Type", ['Built-up', 'Land area'])
-        user_inputs['Size_type'] = 0 if size_type == 'Built-up' else 1
-        property_category = st.selectbox("Property Category", [
-            'High Rise Luxury', 'High Rise Usual', 'Landed Luxury', 'Landed Usual'])
-        g_size = st.selectbox("Group Size", ['b.400 - 600', 'c.600 - 1000', 'd.> 1000'])
-        distance_range = st.selectbox("Distance Range", ['< 500m', '< 1km', '< 2km', '< 3km', '< 4km', '< 5km', 'no train station nearby'])
-        size_category = st.selectbox("Size Category", ['Tiny (400-1000 sq ft)', 'Small (1000-1500 sq ft)', 'Medium (1500-2000 sq ft)', 'Large (2000-3000 sq ft)', 'Very Large (3000-5000 sq ft)', 'Huge (>5000 sq ft)'])
+    # Make prediction
+    predicted_price = model.predict(aligned_input)[0]
 
-        user_inputs[f"Location_{location}"] = 1
-        user_inputs[f"Property Type_{property_type}"] = 1
-        user_inputs[f"Furnishing_{furnishing}"] = 1
-        user_inputs[f"Property Category_{property_category}"] = 1
-        user_inputs[f"g_size_{g_size}"] = 1
-        user_inputs[f"Distance Range_{distance_range}"] = 1
-        user_inputs[f"Size_Category_{size_category}"] = 1
-
-    st.markdown("### 🌟 User Inputs")
-    st.json(user_inputs)
-
-    preprocessed_input = preprocess_input(user_inputs, feature_names)
-    st.markdown("### 🔄 Preprocessed Input Data")
-    st.write(preprocessed_input)
-
-    if st.button("💡 Predict Price"):
-        prediction = model.predict(preprocessed_input)[0]
-        st.success(f"The predicted house price is: RM {prediction:,.2f}")
-
-if __name__ == "__main__":
-    main()
+    # Display the results
+    st.subheader("Predicted House Price:")
+    st.write(f"<span style='font-size:24px; color:#1c5eb6; font-weight:bold;'>RM {predicted_price:,.2f}</span>", unsafe_allow_html=True)
+    st.write("### Input Data for Prediction:")
+    st.dataframe(aligned_input.style.set_properties(**{'background-color': '#f7f9fc', 'color': '#333', 'border': '1px solid #ccc'}))
