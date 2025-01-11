@@ -19,7 +19,7 @@ def min_max_normalize(value, min_value, max_value):
 def load_model_and_features():
     model = joblib.load('random_forest_model.joblib')
     features = joblib.load('feature_names.pkl')  # Ensure this contains the correct feature names
-    return model, feature
+    return model, features
 
 # Preprocess user input data
 def preprocess_input(input_data, feature_names):
