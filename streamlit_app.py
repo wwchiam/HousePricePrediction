@@ -17,8 +17,8 @@ def min_max_normalize(value, min_value, max_value):
 
 # Load model and feature names
 def load_model_and_features():
-    model = joblib.load('/content/drive/MyDrive/WQD7003/random_forest_model.joblib')
-    feature_names = joblib.load('/content/drive/MyDrive/WQD7003/feature_names.pkl')
+    model = joblib.load('random_forest_model.joblib')
+    feature_names = joblib.load('feature_names.pkl')
     return model, feature_names
 
 # Preprocess user input data
