@@ -66,10 +66,10 @@ def main():
     # Numeric Inputs in Column 1
     with col1:
         st.markdown("### 🧮 Numeric Inputs")
-        user_inputs['Rooms'] = st.number_input("Rooms", min_value=0.0, max_value=20.0, value=3.0, step=0.1)
-        user_inputs['Bathrooms'] = st.number_input("Bathrooms", min_value=0.0, max_value=20.0, value=2.0, step=0.1)
-        user_inputs['Car Parks'] = st.number_input("Car Parks", min_value=0.0, max_value=10.0, value=1.0, step=0.1)
-        user_inputs['Size'] = st.number_input("Size (sq ft)", min_value=100.0, max_value=10000.0, value=1500.0, step=1.0)
+        user_inputs['Rooms'] = st.number_input("Rooms", min_value=0, max_value=20, value=3, step=1, format='%d')  # Integer input
+        user_inputs['Bathrooms'] = st.number_input("Bathrooms", min_value=0, max_value=20, value=2, step=1, format='%d')  # Integer input
+        user_inputs['Car Parks'] = st.number_input("Car Parks", min_value=0, max_value=10, value=1, step=1, format='%d')  # Integer input
+        user_inputs['Size'] = st.number_input("Size (sq ft)", min_value=100.0, max_value=10000.0, value=1500.0, step=1.0)  # Float input
         user_inputs['Distance to Hospital (KM)'] = st.number_input("Distance to Hospital (KM)", min_value=0.0, max_value=50.0, value=2.0, step=0.1)
         user_inputs['Distance to Shopping_mall (KM)'] = st.number_input("Distance to Shopping Mall (KM)", min_value=0.0, max_value=50.0, value=1.5, step=0.1)
         user_inputs['Distance to Train_station (KM)'] = st.number_input("Distance to Train Station (KM)", min_value=0.0, max_value=50.0, value=1.0, step=0.1)
